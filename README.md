@@ -1,6 +1,6 @@
 # Standard Standards
 
-Boilerplate recommendations for team coding practices, to aid maintenance of large projects.
+Boilerplate recommendations for team coding practices, to aid maintenance of large projects. Currently (and perhaps perpetually) in draft status—everything is subject to change as new best practices emerge and prior recommendations are rethought.
 
 ## General Naming Conventions
 
@@ -64,7 +64,7 @@ Every React component consists of the following structure:
 
 ### BEM Methodology
 
-Vanilla BEM (Block-Element-Modifier):
+[Mostly] Vanilla BEM (Block-Element-Modifier):
 
 - Blocks: Lowercase name (`block`)
 - Elements: two underscores appended to block (`block__element`)
@@ -78,6 +78,136 @@ When writing modifiers, ensure the base class is also present; modifiers should 
 .block.block--modifier {
 } // Good
 ```
+
+<b>⚠️ Warning</b>: This is a departure from vanilla BEM. Rationale follows; may want to revisit.
+
+<details>
+<summary>Rationale</summary>
+In vanilla BEM, the recommendation is to always use modifier classes as independent selectors, like so:
+
+```scss
+.alert {
+  background-color: white;
+}
+.alert--error {
+  background-color: red;
+}
+```
+
+However, this introduces the possibility of overriding one modifier with another depending on where in the cascade you define the modifier:
+
+```scss
+.alert {
+  background-color: white;
+  border-radius: 0;
+}
+.alert--error {
+  background-color: red;
+}
+.alert--alt {
+  background-color: green;
+  border-radius: 3px;
+}
+```
+
+This CSS would cause the following to display as `green` even though `alert--error` is defined last in the `classList`:
+
+```html
+<div class="alert alert--alt alert--error"></div>
+```
+
+To get around this, a rule can be implemented to always use a single modifier class, combining disparate modifiers into a combined modifier, such as `alert--alt-error`:
+
+```scss
+.alert {
+  background-color: white;
+  border-radius: 0;
+}
+.alert--error {
+  background-color: red;
+}
+.alert--alt {
+  background-color: green;
+  border-radius: 3px;
+}
+.alert--alt-error {
+  background-color: red;
+  border-radius: 3px;
+}
+```
+
+However, this allows for `alert--error`, `alert--alt`, and `alert--alt-error` to be placed on any element, including non-`alert`s, and still have their styles applied, as in `<div class="button alert--alt">`. A modifier should never be used in this way as it means nothing on its own; its definition is in relation to the thing being modified. Additionally, any styles common to `alert--alt` and `alert--alt-error` have to be repeated, unless rewritten like this:
+
+```scss
+.alert--alt,
+.alert--alt-error
+// or [class^="alert--alt"]
+{
+  border-radius: 3px;
+}
+.alert--alt {
+  background-color: green;
+}
+.alert--alt-error {
+  background-color: red;
+}
+```
+
+This is workable, but requires shifting code around as new additions are made. The recommended alternative, then, is to ensure the base class is always present in modifier selectors, in a combined class selector:
+
+```scss
+.alert.alert--alt {}
+```
+
+While vanilla BEM sees this higher specifity as undesirable, since later classes will fail in instances like this:
+
+```html
+<div class="alert alert--alt alert--error"></div>
+```
+```scss
+.alert {}
+.alert.alert--alt {}
+.alert--error {}
+```
+
+…this is a bit contrived as the combined selector practice requires the following, which preserves specificity parity:
+
+```scss
+.alert {}
+.alert.alert--alt {}
+.alert.alert--error {}
+```
+
+Then, if you needed overrides, rather than creating a whole new class, you can just do this:
+
+```scss
+.alert {}
+.alert.alert--error {}
+
+.alert.alert--alt {}
+.alert.alert--alt.alert--error {}
+```
+
+It’s more verbose but it also allows you to be clear about what you want to happen when an element has multiple modifiers that would otherwise compete with each other.
+
+Alternatively, you could keep component state out of CSS classes altogether, limiting them to `aria-*` or `data-*` attributes, which communicate a semantics of not being purely cosmetic, and may be more intuitive to navigate in JavaScript:
+
+```scss
+.alert {}
+.alert[data-has-error] {}
+
+.alert.alert--alt {}
+.alert.alert--alt[data-has-error] {}
+```
+```js
+$alert.className = $alert.className.replace( /\balert--error\b/, '' );
+// or
+$alert.classList.remove( 'alert--error' );
+
+// vs.
+$alert.dataset.hasError = false;
+```
+</details>
 
 An exception to this would be for mixin classes that are intended to be used broadly. For example, responsive utilities to show/hide elements at different breakpoints:
 
