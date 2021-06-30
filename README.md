@@ -1,6 +1,10 @@
-# Standard Standards
+<p align="center"><img src="https://raw.githubusercontent.com/HughxDev/standard-standards/master/standard-standards-logo.svg?sanitize=true" width="150" alt="logo" /></p>
 
-Boilerplate recommendations for team coding practices, to aid maintenance of large projects. Currently (and perhaps perpetually) in draft status—everything is subject to change as new best practices emerge and prior recommendations are rethought.
+<h1 align="center">Standard Standards</h1>
+
+<p align="center">Boilerplate recommendations for team coding practices, to aid maintenance of large projects. Currently (and perhaps perpetually) in draft status—everything is subject to change as new best practices emerge and prior recommendations are rethought.</p>
+
+----
 
 ## General Naming Conventions
 
